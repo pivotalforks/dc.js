@@ -48,7 +48,7 @@ dc.barChart = function (parent, chartGroup) {
 
     _chart.plotData = function () {
         var layers = _chart.chartBodyG().selectAll("g.stack")
-            .data(_chart.stackLayers());
+            .data(_chart.data());
 
         calculateBarWidth();
 
@@ -64,8 +64,6 @@ dc.barChart = function (parent, chartGroup) {
 
             renderBars(layer, i, d);
         });
-
-        _chart.stackLayers(null);
     };
 
     function barHeight(d) {
@@ -74,17 +72,15 @@ dc.barChart = function (parent, chartGroup) {
 
     function renderBars(layer, layerIndex, d) {
         var bars = layer.selectAll("rect.bar")
-            .data(d.points, dc.pluck('data', _chart.keyAccessor()));
+            .data(d.values, dc.pluck('x'));
 
         bars.enter()
             .append("rect")
             .attr("class", "bar")
-            .attr("fill", _chart.getColor);
+            .attr("fill", dc.pluck('data',_chart.layerColor(d.name || layerIndex)));
 
-        if (_chart.renderTitle()) {
-            bars.append("title").text(dc.pluck('data', _chart.getTitleOfVisibleByIndex(layerIndex)));
-
-        }
+        if (_chart.renderTitle())
+            bars.append("title").text(dc.pluck('data',_chart.getTitleByIndex(layerIndex)));
 
         if (_chart.isOrdinal())
             bars.on("click", onClick);
@@ -108,7 +104,7 @@ dc.barChart = function (parent, chartGroup) {
             .attr("height", function (d) {
                 return barHeight(d);
             })
-            .select("title").text(dc.pluck('data', _chart.getTitleOfVisibleByIndex(layerIndex)));
+            .select("title").text(dc.pluck('data',_chart.getTitleByIndex(layerIndex)));
 
         dc.transition(bars.exit(), _chart.transitionDuration())
             .attr("height", 0)
@@ -138,10 +134,10 @@ dc.barChart = function (parent, chartGroup) {
         if (_chart.isOrdinal()) {
             if (_chart.hasFilter()) {
                 bars.classed(dc.constants.SELECTED_CLASS, function (d) {
-                    return _chart.hasFilter(_chart.keyAccessor()(d.data));
+                    return _chart.hasFilter(d.x);
                 });
                 bars.classed(dc.constants.DESELECTED_CLASS, function (d) {
-                    return !_chart.hasFilter(_chart.keyAccessor()(d.data));
+                    return !_chart.hasFilter(d.x);
                 });
             } else {
                 bars.classed(dc.constants.SELECTED_CLASS, false);
@@ -153,8 +149,7 @@ dc.barChart = function (parent, chartGroup) {
                 var end = extent[1];
 
                 bars.classed(dc.constants.DESELECTED_CLASS, function (d) {
-                    var xValue = _chart.keyAccessor()(d.data);
-                    return xValue < start || xValue >= end;
+                    return d.x < start || d.x >= end;
                 });
             } else {
                 bars.classed(dc.constants.DESELECTED_CLASS, false);

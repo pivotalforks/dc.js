@@ -7,12 +7,9 @@ chart implementation.
 
 dc.colorChart = function(_chart) {
     var _colors = d3.scale.category20c();
+    var _defaultAccessor = true;
 
     var _colorAccessor = function(d) { return _chart.keyAccessor()(d); };
-
-    var _colorCalculator = function(value) {
-        return _colors(value,_chart);
-    };
 
     /**
     #### .colors([colorScale])
@@ -74,7 +71,12 @@ dc.colorChart = function(_chart) {
     _chart.colorAccessor = function(_){
         if(!arguments.length) return _colorAccessor;
         _colorAccessor = _;
+        _defaultAccessor = false;
         return _chart;
+    };
+
+    _chart.defaultColorAccessor = function() {
+        return _defaultAccessor;
     };
 
     /**
@@ -107,14 +109,20 @@ dc.colorChart = function(_chart) {
 
     **/
     _chart.getColor = function(d, i){
-        return _colorCalculator(_colorAccessor(d, i));
+        return _colors(_colorAccessor(d, i));
     };
 
     _chart.colorCalculator = function(_){
-        if(!arguments.length) return _colorCalculator;
-        _colorCalculator = _;
+        if(!arguments.length) return _chart.getColor;
+        _chart.getColor = _;
         return _chart;
     };
+
+    _chart.layerColor = function(layerIndex) {
+        if (_defaultAccessor)
+            return function() {return _colors(layerIndex);};
+        return _chart.getColor;
+    }
 
     return _chart;
 };

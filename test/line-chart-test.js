@@ -356,7 +356,7 @@ suite.addBatch({'stacked area chart': {
     'charts retain their own titles when other stacks are hidden': function (chart) {
         chart.hideStack("stack 0");
         chart.render();
-        chart.selectAll("#stacked-area-chart g._0 circle.dot").each(function (d) {
+        chart.selectAll("#stacked-area-chart g._1 circle.dot").each(function (d) {
             assert.equal(d3.select(this).select("title").text(), "stack 1: " + d.data.value);
         });
 
