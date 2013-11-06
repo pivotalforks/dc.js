@@ -121,12 +121,4 @@ dc.utils.appendOrSelect = function (parent, name) {
     return element;
 };
 
-dc.utils.createLegendable = function (name, color) {
-    var legendable = {name:name};
-    if (color) legendable.color = color;
-    if (chart.dashStyle && chart.dashStyle()) legendable.dashstyle = chart.dashStyle();
-    return legendable;
-};
-
 dc.utils.safeNumber = function(n){return dc.utils.isNumber(+n)?+n:0;};
-

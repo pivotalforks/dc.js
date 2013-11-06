@@ -118,11 +118,5 @@ dc.colorChart = function(_chart) {
         return _chart;
     };
 
-    _chart.layerColor = function(layerIndex) {
-        if (_defaultAccessor)
-            return function() {return _colors(layerIndex);};
-        return _chart.getColor;
-    }
-
     return _chart;
 };

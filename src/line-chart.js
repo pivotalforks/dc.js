@@ -116,6 +116,10 @@ dc.lineChart = function (parent, chartGroup) {
         return _chart;
     };
 
+    function color(d,i) {
+        return _chart.stackColor(d.name || i)(d,i);
+    }
+
     function drawLine(layersEnter, layers) {
         var line = d3.svg.line()
             .x(function (d) {
@@ -132,8 +136,8 @@ dc.lineChart = function (parent, chartGroup) {
 
         var path = layersEnter.append("path")
             .attr("class", "line")
-            .attr("stroke", _chart.getColor)
-            .attr("fill", _chart.getColor);
+            .attr("stroke", color)
+            .attr("fill", color);
         if (_dashStyle)
             path.attr("stroke-dasharray", _dashStyle);
 
@@ -163,7 +167,7 @@ dc.lineChart = function (parent, chartGroup) {
 
             layersEnter.append("path")
                 .attr("class", "area")
-                .attr("fill", _chart.getColor)
+                .attr("fill", color)
                 .attr("d", function (d) {
                     return safeD(area(d.values));
                 });
@@ -204,7 +208,7 @@ dc.lineChart = function (parent, chartGroup) {
                     .append("circle")
                     .attr("class", DOT_CIRCLE_CLASS)
                     .attr("r", _dataPointRadius || _dotRadius)
-                    .attr("fill", _chart.getColor)
+                    .attr("fill", _chart.stackColor(d.name || layerIndex))
                     .style("fill-opacity", _dataPointFillOpacity)
                     .style("stroke-opacity", _dataPointStrokeOpacity)
                     .on("mousemove", function (d) {
@@ -332,6 +336,15 @@ dc.lineChart = function (parent, chartGroup) {
             return d3.select(this).attr('fill') != d.color;
         }).classed('fadeout', false);
     };
+
+    dc.override(_chart,'legendables', function() {
+        var legendables = _chart._legendables();
+        if (!_dashStyle) return legendables;
+        return legendables.map(function(l) {
+            l.dashstyle = _dashStyle;
+            return l;
+        });
+    });
 
     return _chart.anchor(parent, chartGroup);
 };

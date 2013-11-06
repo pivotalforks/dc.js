@@ -180,6 +180,7 @@ dc.baseChart = function (_chart) {
     _chart.group = function (g, name) {
         if (!arguments.length) return _group;
         _group = g;
+        _chart._groupName = name;
         _chart.expireCache();
         return _chart;
     };
@@ -813,6 +814,8 @@ dc.baseChart = function (_chart) {
     _chart.chartID = function () {
         return _chart.__dc_flag__;
     };
+
+    _chart._nestedIndex = "";
 
     return _chart;
 };

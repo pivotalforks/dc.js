@@ -132,9 +132,7 @@ dc.compositeChart = function (parent, chartGroup) {
                 child.title(_chart.title());
             }
 
-            //if (_shareColors && child.defaultColorAccessor())
-                //child.colorCalculator(function() {return child.colors()(i);});
-
+            child._nestedIndex += i;
         });
         return _chart;
     };
@@ -220,12 +218,7 @@ dc.compositeChart = function (parent, chartGroup) {
         _children.forEach(function(child, i) {
             if (_shareColors)
                 child.colors(_chart.colors());
-
-            var childLegendables = child.legendables();
-            if (childLegendables.length)
-                items.push.apply(items,childLegendables);
-            else
-                items.push(dc.utils.createLegendable("name", "blue"));
+            items.push.apply(items, child.legendables());
         });
         return items;
     };

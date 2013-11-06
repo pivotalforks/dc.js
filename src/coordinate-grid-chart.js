@@ -23,7 +23,7 @@ dc.coordinateGridChart = function (_chart) {
 
     var _x;
     var _xOriginalDomain;
-    var _xAxis = d3.svg.axis();
+    var _xAxis = d3.svg.axis().orient("bottom");
     var _xUnits = dc.units.integers;
     var _xAxisPadding = 0;
     var _xElasticity = false;
@@ -31,7 +31,7 @@ dc.coordinateGridChart = function (_chart) {
     var _xAxisLabelPadding = 0;
 
     var _y;
-    var _yAxis = d3.svg.axis();
+    var _yAxis = d3.svg.axis().orient("left");
     var _yAxisPadding = 0;
     var _yElasticity = false;
     var _yAxisLabel;
@@ -278,8 +278,13 @@ dc.coordinateGridChart = function (_chart) {
             _x.domain([_chart.xAxisMin(), _chart.xAxisMax()]);
         }
         else if (_chart.isOrdinal() && _x.domain().length===0) {
-            var orderedData = _chart.computeOrderedGroups(_chart.data());
-            _x.domain(orderedData.map(_chart.keyAccessor()));
+            if (!_chart._flattenStack) {
+              var orderedData = _chart.computeOrderedGroups(_chart.data());
+              _x.domain(orderedData.map(_chart.keyAccessor()));
+            } else {
+              var orderedData = _chart._flattenStack().map(dc.pluck('x'));
+              _x.domain(orderedData);
+            }
         }
 
         if (_chart.isOrdinal()) {
@@ -288,7 +293,7 @@ dc.coordinateGridChart = function (_chart) {
             _x.range([0, _chart.xAxisLength()]);
         }
 
-        _xAxis = _xAxis.scale(_chart.x()).orient("bottom");
+        _xAxis = _xAxis.scale(_chart.x());
 
         renderVerticalGridLines(g);
     }
@@ -387,7 +392,7 @@ dc.coordinateGridChart = function (_chart) {
         }
 
         _y.range([_chart.yAxisHeight(), 0]);
-        _yAxis = _yAxis.scale(_y).orient("left");
+        _yAxis = _yAxis.scale(_y);
 
         renderHorizontalGridLines(g);
     }

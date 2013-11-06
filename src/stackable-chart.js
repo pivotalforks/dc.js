@@ -14,7 +14,6 @@ dc.stackableChart = function (_chart) {
 
     var _stack = [];
     var _titles = {};
-    var _groupName;
 
     var _hidableStacks = false;
 
@@ -38,7 +37,7 @@ dc.stackableChart = function (_chart) {
         if (_chart.isOrdinal()) {
             var domainSet = d3.set(xDomain);
             return function(p) {
-                return domainSet.has(p.x);
+                return true; //domainSet.has(p.x);
             };
         }
         return function(p) {
@@ -79,7 +78,6 @@ dc.stackableChart = function (_chart) {
         _stack = [];
         _titles = {};
         _chart.stack(g,n);
-        _groupName = n;
         if (f) _chart.valueAccessor(f);
         return _chart._group(g,n);
     });
@@ -191,7 +189,7 @@ dc.stackableChart = function (_chart) {
         if (!stackName) return _chart._title();
 
         if (typeof stackName === 'function') return _chart._title(stackName);
-        if (stackName == _groupName && typeof titleAccessor === 'function')
+        if (stackName == _chart._groupName && typeof titleAccessor === 'function')
             return _chart._title(titleAccessor);
 
         if (typeof titleAccessor !== 'function') return _titles[stackName] || _chart._title();
@@ -214,31 +212,39 @@ dc.stackableChart = function (_chart) {
     function visability(l) {
         return !l.hidden;
     }
+    _chart.data(function() {
+        var layers = _stack.filter(visability);
+        return layers.length ? _chart.stackLayout()(layers) : [];
+    });
+
+    _chart.stackColor = function(layerIndex) {
+        if (_chart.defaultColorAccessor())
+            return function() {return _chart.colors()(_chart._nestedIndex + layerIndex);};
+        return _chart.getColor;
+    }
 
     _chart.legendables = function () {
         return _chart.data().map(function (layer, i) {
-            return dc.utils.createLegendable(layer.name, i);
+            var n = layer.name || i,
+                c = _chart.stackColor(n)(n,i);
+            return {chart:_chart, name:layer.name, color:c};
         });
     };
 
     _chart.isLegendableHidden = function (d) {
-        return _hiddenStacks.indexOf(d.name) !== -1;
+        var layer = findLayerByName(d.name);
+        return layer.hidden;
     };
 
     _chart.legendToggle = function (d) {
         if(_hidableStacks) {
-            var index;
-            if ((index = _hiddenStacks.indexOf(d.name)) !== -1) {
-                _hiddenStacks.splice(index, 1);
-                _chart.showStack(d.name);
-            }
-            else {
-                _hiddenStacks.push(d.name);
-                _chart.hideStack(d.name);
-            }
+            if (_chart.isLegendableHidden(d)) _chart.showStack(d.name);
+            else _chart.hideStack(d.name);
         }
         _chart.render();
     };
+
+    _chart._flattenStack = flattenStack;
 
     return _chart;
 };

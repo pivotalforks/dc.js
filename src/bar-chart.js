@@ -77,7 +77,7 @@ dc.barChart = function (parent, chartGroup) {
         bars.enter()
             .append("rect")
             .attr("class", "bar")
-            .attr("fill", dc.pluck('data',_chart.layerColor(d.name || layerIndex)));
+            .attr("fill", dc.pluck('data',_chart.stackColor(d.name || layerIndex)));
 
         if (_chart.renderTitle())
             bars.append("title").text(dc.pluck('data',_chart.getTitleByIndex(layerIndex)));
