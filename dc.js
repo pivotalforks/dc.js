@@ -6232,7 +6232,7 @@ dc.heatMap = function (parent, chartGroup) {
 d3.box = function() {
   var width = 1,
       height = 1,
-      duration = 0,
+      duration = 750,
       domain = null,
       value = Number,
       whiskers = boxWhiskers,
@@ -6248,19 +6248,50 @@ d3.box = function() {
           min = d[0],
           max = d[n - 1];
 
-      // Compute quartiles. Must return exactly 3 elements.
-      var quartileData = d.quartiles = quartiles(d);
+      var quartileData = [], whiskerIndices = [], whiskerData = [];
+      var center, box, medianLine, whisker, outlier, boxTick, whiskerTick;
+      if(d.length == 0) {
+          var boxContents = ["line.center", "rect.box", "line.median", "line.whisker", "circle.outlier",
+              "text.box", "text.whisker"];
+          for (var i in boxContents) {
+              g.selectAll(boxContents[i]).
+                  data([]).
+                  exit().
+                  transition().
+                  duration(duration).
+                  style("opacity", 1e-6).
+                  remove();
+          }
+//        center = g.selectAll("line.center").data([]);
+//          box = g.selectAll("rect.box").data([]);
+//          medianLine = g.selectAll("line.median").data([]);
+//          whisker = g.selectAll("line.whisker").data([]);
+//          outlier = g.selectAll("circle.outlier").data([]);
+//          boxTick = g.selectAll("text.box").data([]);
+//          whiskerTick = g.selectAll("text.whisker").data([]);
+//
+//          center.exit().remove();
+//          box.exit().remove();
+//          medianLine.exit().remove();
+//          whisker.exit().remove();
+//          outlier.exit().remove();
+//          boxTick.exit().remove();
+//          whiskerTick.exit().remove();
+       } else {
+        // Compute quartiles. Must return exactly 3 elements.
+        quartileData = d.quartiles = quartiles(d);
 
-      // Compute whiskers. Must return exactly 2 elements, or null.
-      var whiskerIndices = whiskers && whiskers.call(this, d, i),
-          whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
+        // Compute whiskers. Must return exactly 2 elements, or null.
+        whiskerIndices = whiskers && whiskers.call(this, d, i);
+        whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
 
       // Compute outliers. If no whiskers are specified, all data are "outliers".
       // We compute the outliers as indices, so that we can join across transitions!
-      var outlierIndices = whiskerIndices
+      var outlierIndices = (whiskerIndices && whiskerIndices.length)
           ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
           : d3.range(n);
 
+      // TODO rename these "oldRange" and "newRange"
       // Compute the new x-scale.
       var x1 = d3.scale.linear()
           .domain(domain && domain.call(this, d, i) || [min, max])
@@ -6280,15 +6311,17 @@ d3.box = function() {
       // elements also fade in and out.
 
       // Update center line: the vertical line spanning the whiskers.
-      var center = g.selectAll("line.center")
+      center = g.selectAll("line.center")
           .data(whiskerData ? [whiskerData] : []);
 
-      center.enter().insert("line", "rect")
+      var centerEnter = center.enter();
+      console.log("centerEnter", centerEnter);
+      centerEnter.insert("line", "rect")
           .attr("class", "center")
           .attr("x1", width / 2)
-          .attr("y1", function(d) { return x0(d[0]); })
+          .attr("y1", function(d) { return x1(d[0]); })
           .attr("x2", width / 2)
-          .attr("y2", function(d) { return x0(d[1]); })
+          .attr("y2", function(d) { return x1(d[1]); })
           .style("opacity", 1e-6)
         .transition()
           .duration(duration)
@@ -6302,7 +6335,10 @@ d3.box = function() {
           .attr("y1", function(d) { return x1(d[0]); })
           .attr("y2", function(d) { return x1(d[1]); });
 
-      center.exit().transition()
+      var centerExit = center.exit();
+          console.log("centerExit", centerExit);
+
+          centerExit.transition()
           .duration(duration)
           .style("opacity", 1e-6)
           .attr("y1", function(d) { return x1(d[0]); })
@@ -6310,10 +6346,11 @@ d3.box = function() {
           .remove();
 
       // Update innerquartile box.
-      var box = g.selectAll("rect.box")
+      box = g.selectAll("rect.box")
           .data([quartileData]);
 
       box.enter().append("rect")
+          .style("opacity", 1)
           .attr("class", "box")
           .attr("x", 0)
           .attr("y", function(d) { return x0(d[2]); })
@@ -6330,10 +6367,11 @@ d3.box = function() {
           .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
 
       // Update median line.
-      var medianLine = g.selectAll("line.median")
+      medianLine = g.selectAll("line.median")
           .data([quartileData[1]]);
 
       medianLine.enter().append("line")
+          .style("opacity", 1)
           .attr("class", "median")
           .attr("x1", 0)
           .attr("y1", x0)
@@ -6350,7 +6388,7 @@ d3.box = function() {
           .attr("y2", x1);
 
       // Update whiskers.
-      var whisker = g.selectAll("line.whisker")
+      whisker = g.selectAll("line.whisker")
           .data(whiskerData || []);
 
       whisker.enter().insert("line", "circle, text")
@@ -6380,7 +6418,7 @@ d3.box = function() {
           .remove();
 
       // Update outliers.
-      var outlier = g.selectAll("circle.outlier")
+      outlier = g.selectAll("circle.outlier")
           .data(outlierIndices, Number);
 
       outlier.enter().insert("circle", "text")
@@ -6409,7 +6447,7 @@ d3.box = function() {
       var format = tickFormat || x1.tickFormat(8);
 
       // Update box ticks.
-      var boxTick = g.selectAll("text.box")
+      boxTick = g.selectAll("text.box")
           .data(quartileData);
 
       boxTick.enter().append("text")
@@ -6432,7 +6470,7 @@ d3.box = function() {
       // Update whisker ticks. These are handled separately from the box
       // ticks because they may or may not exist, and we want don't want
       // to join box ticks pre-transition with whisker ticks post-.
-      var whiskerTick = g.selectAll("text.whisker")
+      whiskerTick = g.selectAll("text.whisker")
           .data(whiskerData || []);
 
       whiskerTick.enter().append("text")
@@ -6459,6 +6497,7 @@ d3.box = function() {
           .attr("y", x1)
           .style("opacity", 1e-6)
           .remove();
+      }
     });
     d3.timer.flush();
   }
@@ -6624,19 +6663,18 @@ dc.boxPlot = function (parent, chartGroup) {
             .width(_calculatedBoxWidth)
             .height(_chart.effectiveHeight())
             .value(_chart.valueAccessor())
-            .domain(_chart.y().domain());
+            .domain(_chart.y().domain())
+            .duration(_chart.transitionDuration());
 
         var boxTransform = function (d, i) {
             var xOffset = _chart.x()(_chart.keyAccessor()(d,i));
             return "translate(" + xOffset + ",0)";
         };
 
-        _chart.chartBodyG().selectAll('g.box')
-            .data(_chart.data())
-          .enter().append("g")
-            .attr("class", "box")
-            .attr("transform", boxTransform)
-            .call(_box);
+        var boxG = _chart.chartBodyG().selectAll('g.box').data(_chart.data());
+        boxG.enter().append("g").attr("transform", boxTransform).attr("class", "box");
+        boxG.exit().remove();
+        boxG.call(_box);
 
         _chart.chartBodyG().selectAll('g.box')
             .each(function() {

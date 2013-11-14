@@ -24,7 +24,8 @@ describe('dc.boxPlot', function() {
             .boxPadding(0)
             .y(d3.scale.ordinal().domain([0, 144]))
             .colors(['#eeeeee'])
-            .colorAccessor(function(){ return 0; });
+            .colorAccessor(function(){ return 0; })
+            .transitionDuration(0);
     });
 
     describe('rendering the box plot', function () {
@@ -36,6 +37,7 @@ describe('dc.boxPlot', function() {
             expect(chart.svg().empty()).toBeFalsy();
         });
 
+        // TODO make more specific to column?
         it('should create one outlier circle per outlier', function() {
             expect(chart.selectAll('circle.outlier').size()).toBe(2);
         });
@@ -102,8 +104,47 @@ describe('dc.boxPlot', function() {
             expect(box(0).select('rect.box').attr("fill")).toBe("#eeeeee");
             expect(box(1).select('rect.box').attr("fill")).toBe("#eeeeee");
         });
-    });
 
+        describe('when a box has no data', function() {
+            beforeEach(function() {
+                var firstColumn = chart.data()[0];
+                firstColumn.value = [];
+                chart.render();
+            });
+
+            it('should still draw the box container', function () {
+                expect(box(0)).not.toBeNull();
+            });
+
+            it('should not draw a median line', function () {
+                expect(box(0).selectAll('line.median').empty()).toBe(true);
+            });
+
+            it('should not draw a center line', function () {
+                expect(box(0).selectAll('line.center').empty()).toBe(true);
+            });
+
+            it('should not draw an inner quartile rectangle', function () {
+                expect(box(0).selectAll('rect.box').empty()).toBe(true);
+            });
+
+            it('should not draw whiskers', function () {
+                expect(box(0).selectAll('line.whisker').empty()).toBe(true);
+            });
+
+            it('should not draw outlier circles', function () {
+                expect(box(0).selectAll('circle.outlier').empty()).toBe(true);
+            });
+
+            it('should not draw quartile tick text', function () {
+                expect(box(0).selectAll('text.box').empty()).toBe(true);
+            });
+
+            it('should not draw whisker tick text', function () {
+                expect(box(0).selectAll('text.whisker').empty()).toBe(true);
+            });
+        });
+    });
 
     describe('events', function () {
         beforeEach(function () {

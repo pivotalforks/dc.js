@@ -94,19 +94,18 @@ dc.boxPlot = function (parent, chartGroup) {
             .width(_calculatedBoxWidth)
             .height(_chart.effectiveHeight())
             .value(_chart.valueAccessor())
-            .domain(_chart.y().domain());
+            .domain(_chart.y().domain())
+            .duration(_chart.transitionDuration());
 
         var boxTransform = function (d, i) {
             var xOffset = _chart.x()(_chart.keyAccessor()(d,i));
             return "translate(" + xOffset + ",0)";
         };
 
-        _chart.chartBodyG().selectAll('g.box')
-            .data(_chart.data())
-          .enter().append("g")
-            .attr("class", "box")
-            .attr("transform", boxTransform)
-            .call(_box);
+        var boxG = _chart.chartBodyG().selectAll('g.box').data(_chart.data());
+        boxG.enter().append("g").attr("transform", boxTransform).attr("class", "box");
+        boxG.exit().remove();
+        boxG.call(_box);
 
         _chart.chartBodyG().selectAll('g.box')
             .each(function() {
