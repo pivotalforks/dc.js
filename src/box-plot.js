@@ -30,6 +30,9 @@ dc.boxPlot = function (parent, chartGroup) {
     var _whiskers = _whiskers_iqr(_whisker_iqr_factor);
 
     var _box = d3.box();
+    var _tickFormat = null;
+
+
     var _boxWidth = function (innerChartWidth, xUnits) {
         if (_chart.isOrdinal())
             return _chart.x().rangeBand();
@@ -87,6 +90,11 @@ dc.boxPlot = function (parent, chartGroup) {
         return _chart;
     };
 
+    var boxTransform = function (d, i) {
+        var xOffset = _chart.x()(_chart.keyAccessor()(d,i));
+        return "translate(" + xOffset + ",0)";
+    };
+
     _chart.plotData = function () {
         var _calculatedBoxWidth = _boxWidth(_chart.effectiveWidth(), _chart.xUnitCount());
 
@@ -95,28 +103,44 @@ dc.boxPlot = function (parent, chartGroup) {
             .height(_chart.effectiveHeight())
             .value(_chart.valueAccessor())
             .domain(_chart.y().domain())
-            .duration(_chart.transitionDuration());
+            .duration(_chart.transitionDuration())
+            .tickFormat(_tickFormat);
 
-        var boxTransform = function (d, i) {
-            var xOffset = _chart.x()(_chart.keyAccessor()(d,i));
-            return "translate(" + xOffset + ",0)";
-        };
 
-        var boxG = _chart.chartBodyG().selectAll('g.box').data(_chart.data());
-        boxG.enter().append("g").attr("transform", boxTransform).attr("class", "box");
-        boxG.exit().remove();
-        boxG.call(_box);
+        var boxesG = _chart.chartBodyG().selectAll('g.box').data(_chart.data());
 
-        _chart.chartBodyG().selectAll('g.box')
-            .each(function() {
-                d3.select(this).select('rect.box').attr("fill", _chart.getColor);
-            })
+        renderBoxes(boxesG);
+        updateBoxes(boxesG);
+        removeBoxes(boxesG);
+
+        _chart.fadeDeselectedArea();
+    };
+
+    function renderBoxes(boxesG) {
+        var boxesGEnter = boxesG.enter().append("g");
+
+        boxesGEnter
+            .attr("class", "box")
+            .attr("transform", boxTransform)
+            .call(_box)
             .on("click", function(d) {
                 _chart.filter(d.key);
-                _chart.focus(_chart.filter());
                 dc.redrawAll(_chart.chartGroup());
             });
-    };
+    }
+
+    function updateBoxes(boxesG) {
+        dc.transition(boxesG, _chart.transitionDuration())
+            .attr("transform", boxTransform)
+            .call(_box)
+            .each(function() {
+                d3.select(this).select('rect.box').attr("fill", _chart.getColor);
+            });
+    }
+
+    function removeBoxes(boxesG) {
+        boxesG.exit().remove().call(_box);
+    }
 
     _chart.fadeDeselectedArea = function () {
         if (_chart.hasFilter()) {
@@ -150,6 +174,20 @@ dc.boxPlot = function (parent, chartGroup) {
             return d3.max(_chart.valueAccessor()(e));
         });
         return dc.utils.add(max, _chart.yAxisPadding());
+    };
+
+    /**
+     #### .tickFormat()
+     Set the numerical format of the boxplot median, whiskers and quartile labels. Defaults to integer.
+     ```js
+     // format ticks to 2 decimal places
+     chart.tickFormat(d3.format(".2f"));
+     ```
+     **/
+    _chart.tickFormat = function(x) {
+        if (!arguments.length) return _tickFormat;
+        _tickFormat = x;
+        return _chart;
     };
 
     // Returns a function to compute the interquartile range.
