@@ -1,0 +1,9 @@
+#!/bin/sh
+
+NEW_NODE_PATH=`npm -g root`
+
+if [ "${NODE_PATH}" = "" -a -d "${NEW_NODE_PATH}" ]; then
+  export NODE_PATH=${NEW_NODE_PATH}
+fi
+
+node ${1}

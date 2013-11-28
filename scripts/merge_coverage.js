@@ -1,11 +1,12 @@
-// Merge jasmine and vows coverage objects
+// Merges jasmine and vows coverage objects.
+// $NODE_PATH must be set to include istanbul.
+// Run from DC.js project base directory 
 
 var istanbul = require('istanbul');
 
-var jasmineCoverageJSON = './jasmine/coverage.json';
-var vowsCoverageJSON = './vows/coverage.json';
-var mergedOutputDir = './merged';
-
+var jasmineCoverageJSON = './coverage/jasmine/coverage.json';
+var vowsCoverageJSON = './coverage/vows/coverage.json';
+var mergedOutputDir = './coverage/merged';
 
 var jasmineFileCoverage = getDCFileCoverage(require(jasmineCoverageJSON));
 var vowsFileCoverage = getDCFileCoverage(require(vowsCoverageJSON));

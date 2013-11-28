@@ -181,7 +181,7 @@ module.exports = function (grunt) {
                 }
             },
             merge_coverage: {
-                command: "cd coverage && node merge_coverage.js",
+                command: "./scripts/run ./scripts/merge_coverage.js",
                 options: {
                   stdout: true
                 }
